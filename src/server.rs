@@ -1,5 +1,5 @@
 use std::{io::BufRead, net::{TcpListener, TcpStream}};
-use crate::{store};
+use crate::{store, command};
 use std::io::BufReader;
 
 #[derive(Debug)]
@@ -32,9 +32,22 @@ pub fn run(socket: TcpListener){
 
 pub fn handle_con(stream: TcpStream){
 
-    let mut reader = BufReader::new(stream);
+    let mut reader = BufReader::new(&stream);
     for line in reader.lines(){
         let line = line.unwrap();
         println!("{}", line);
+
+        let cmd = command::Command::parse(&line);
+        let cmd = match cmd{
+            Ok(val) => {
+                val
+            },
+            Err(error) => {
+                println!("{}", error.to_string());
+                continue
+            },
+        };
+
+
     }
 }
