@@ -4,33 +4,31 @@ use std::io::BufReader;
 
 #[derive(Debug)]
 struct Server{
-    socket: TcpListener,
     db: store::Db,
 }
 
 impl Server{
-    fn new(socket: TcpListener) -> Server{
+    fn new() -> Server{
         Server{
-            socket,
             db: store::Db::new(),
         }
     }
 
-    fn get_socket(&self) -> &TcpListener{
-        &self.socket
+    fn get_db(&mut self) -> &mut store::Db{
+        &mut self.db
     }
 }
 
 pub fn run(socket: TcpListener){
 
-    let server = Server::new(socket);
-    for stream in server.get_socket().incoming(){
+    let mut server = Server::new();
+    for stream in socket.incoming(){
         let stream = stream.unwrap();
-        handle_con(stream);
+        handle_con(stream, &mut server);
     }
 }
 
-pub fn handle_con(stream: TcpStream){
+fn handle_con(stream: TcpStream, server: &mut Server){
 
     let mut reader = BufReader::new(&stream);
     for line in reader.lines(){
@@ -48,6 +46,8 @@ pub fn handle_con(stream: TcpStream){
             },
         };
 
+        let res = server.get_db().run(&cmd);
+        println!("{}", res.unwrap());
 
     }
 }

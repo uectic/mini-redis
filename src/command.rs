@@ -15,7 +15,7 @@ impl Command{
         let cmd_vec: Vec<&str> = cmd.split(' ').collect();
         match cmd_vec[0]{
             "get" => {
-                match Get::parse_get(&cmd_vec){
+                match Get::parse_get(cmd_vec){
                     Ok(val) => {
                         Ok(Command::Get(val))
                     },
@@ -25,7 +25,7 @@ impl Command{
                 }
             },
             "set" =>{
-                match Set::parse_set(&cmd_vec){
+                match Set::parse_set(cmd_vec){
                     Ok(val) => {
                         Ok(Command::Set(val))
                     },
@@ -35,7 +35,7 @@ impl Command{
                 }
             },
             "del" => {
-                match Del::parse_del(&cmd_vec){
+                match Del::parse_del(cmd_vec){
                     Ok(val) => {
                         Ok(Command::Del(val))
                     },
@@ -45,7 +45,7 @@ impl Command{
                 }
             },
             "ping" => {
-                match Ping::parse_ping(&cmd_vec){
+                match Ping::parse_ping(cmd_vec){
                     Ok(val) => {
                         Ok(Command::Ping(val))
                     },
@@ -84,7 +84,7 @@ impl Get{
         &self.key
     }
 
-    pub fn parse_get(vec: &[&str]) -> Result<Get, error::ParseError>{
+    pub fn parse_get(vec: Vec<&str>) -> Result<Get, error::ParseError>{
         if vec.len()!=2{
             Err(error::ParseError)
         } else{
@@ -114,7 +114,7 @@ impl Set{
         &self.value
     }
 
-    pub fn parse_set(vec: &[&str]) -> Result<Set, error::ParseError>{
+    pub fn parse_set(vec: Vec<&str>) -> Result<Set, error::ParseError>{
         if vec.len()!=3{
             Err(error::ParseError)
         } else{
@@ -139,7 +139,7 @@ impl Del{
         &self.key
     }
 
-    pub fn parse_del(vec: &[&str]) -> Result<Del, error::ParseError>{
+    pub fn parse_del(vec: Vec<&str>) -> Result<Del, error::ParseError>{
         if vec.len()!=2{
             Err(error::ParseError)
         } else{
@@ -171,11 +171,11 @@ impl Ping{
         }
     }
 
-    pub fn key(&self) -> &str{
+    pub fn msg(&self) -> &str{
         &self.msg
     }
 
-    pub fn parse_ping(vec: &[&str]) -> Result<Ping, error::ParseError>{
+    pub fn parse_ping(vec: Vec<&str>) -> Result<Ping, error::ParseError>{
         if vec.len()==1{
             Ok(Ping::new(Some(String::from(""))))
         } 
