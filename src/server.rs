@@ -1,4 +1,4 @@
-use std::{io::BufRead, net::{TcpListener, TcpStream}};
+use std::{io::{BufRead, BufWriter, Write}, net::{TcpListener, TcpStream}};
 use crate::{store, command};
 use std::io::BufReader;
 
@@ -31,6 +31,7 @@ pub fn run(socket: TcpListener){
 fn handle_con(stream: TcpStream, server: &mut Server){
 
     let mut reader = BufReader::new(&stream);
+    let mut writer = BufWriter::new(&stream);
     for line in reader.lines(){
         let line = line.unwrap();
         println!("{}", line);
@@ -46,8 +47,24 @@ fn handle_con(stream: TcpStream, server: &mut Server){
             },
         };
 
-        let res = server.get_db().run(&cmd);
-        println!("{}", res.unwrap());
-
+        let res = server.get_db().run(cmd);
+        match res {
+            Some(mut val) => {
+                val.push('\n');
+                match writer.write_all(val.as_bytes()){
+                    Err(_) =>{
+                        println!("write failed")
+                    },
+                    Ok(_)=>{
+                        if let Ok(_) = writer.flush(){
+                            print!("{}", val)
+                        } else{
+                            println!("write failed")
+                        }
+                    }
+                }
+            }
+            None => println!("(nil)"),
+        }
     }
 }

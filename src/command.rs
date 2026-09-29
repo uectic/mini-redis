@@ -114,6 +114,10 @@ impl Set{
         &self.value
     }
 
+    pub fn into_parts(self) -> (String, String){
+        (self.key, self.value)
+    }
+
     pub fn parse_set(vec: Vec<&str>) -> Result<Set, error::ParseError>{
         if vec.len()!=3{
             Err(error::ParseError)
@@ -173,6 +177,10 @@ impl Ping{
 
     pub fn msg(&self) -> &str{
         &self.msg
+    }
+
+    pub fn into_msg(self) -> String{
+        self.msg
     }
 
     pub fn parse_ping(vec: Vec<&str>) -> Result<Ping, error::ParseError>{

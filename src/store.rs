@@ -1,5 +1,5 @@
 use std::collections::HashMap;
-use crate::command::{self, Unknown};
+use crate::command::{self};
 
 #[derive(Debug)]
 pub struct Db{
@@ -14,30 +14,28 @@ impl Db{
         }
     }
 
-    pub fn run<'a>(&'a mut self, cmd: &'a command::Command) -> Option<&'a str>{
+    pub fn run(&mut self, cmd: command::Command) -> Option<String>{
         match cmd{
             command::Command::Get(get) => {
-                let res = self.mem.get(get.key())?;
-                Some(res)
+                self.mem.get(get.key()).cloned()
             },
             command::Command::Set(set) => {
-                self.mem.insert(set.key().to_string(), set.value().to_string())?;
-                Some("Success")
+                self.mem.insert(set.key().to_string(), set.value().to_string());
+                Some("OK".to_string())
             },
             command::Command::Del(del) => {
-                self.mem.remove(del.key())?;
-                Some("Success")
+                let removed = self.mem.remove(del.key()).is_some();
+                Some(if removed { "1".to_string() } else { "0".to_string() })
             }
             command::Command::Ping(ping) => {
-                if ping.msg() == ""{
-                    Some("PONG")
-                } else{
-                    let res = ping.msg();
-                    Some(res)
+                if ping.msg().is_empty() {
+                    Some("PONG".to_string())
+                } else {
+                    Some(ping.into_msg())
                 }
             }
-            command::Command::Unknown(unknown) => {
-                Some("Failure")
+            command::Command::Unknown(_) => {
+                Some("ERR unknown command".to_string())
             },
         }
     }
