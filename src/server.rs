@@ -1,4 +1,4 @@
-use std::{io::{BufRead, BufWriter, Write}, net::{TcpListener, TcpStream}};
+use std::{io::BufWriter, net::{TcpListener, TcpStream}};
 use crate::{command, store, threadpool::ThreadPool, parser};
 use std::io::BufReader;
 use std::sync::Mutex;
