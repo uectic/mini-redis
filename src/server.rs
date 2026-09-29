@@ -1,5 +1,5 @@
 use std::{io::{BufRead, BufWriter, Write}, net::{TcpListener, TcpStream}};
-use crate::{command, store, threadpool::ThreadPool};
+use crate::{command, store, threadpool::ThreadPool, parser};
 use std::io::BufReader;
 use std::sync::Mutex;
 use std::sync::Arc;
@@ -28,44 +28,33 @@ fn handle_con(stream: TcpStream, db: Arc<Mutex<store::Db>>) {
     let mut writer = BufWriter::new(&stream);
 
     loop {
-        let mut line = String::new();
-        match reader.read_line(&mut line) {
-            Ok(0) => break,
-            Ok(_) => {}
+        let parts = match parser::parse_resp(&mut reader) {
+            Ok(Some(parts)) if !parts.is_empty() => parts,
+            Ok(Some(_)) => continue,
+            Ok(None) => break,
             Err(e) => {
-                println!("read error: {e}");
+                println!("resp error: {e}");
+                let _ = parser::write_reply(&mut writer, &parser::Reply::Error(format!("ERR {e}")));
                 break;
             }
-        }
-        let line = line.trim_end();
-        if line.is_empty() {
-            continue;
-        }
+        };
 
-        println!("{line}");
-
-        let cmd = match command::Command::parse(line) {
-            Ok(val) => val,
-            Err(error) => {
-                println!("{error}");
+        let cmd = match command::Command::parse(&parts) {
+            Ok(cmd) => cmd,
+            Err(e) => {
+                let _ = parser::write_reply(&mut writer, &parser::Reply::Error(format!("ERR {e}")));
                 continue;
             }
         };
 
-        let res = {
+        let reply = {
             let mut db = db.lock().unwrap();
             db.run(cmd)
         };
 
-        match res {
-            Some(mut val) => {
-                val.push('\n');
-                if writer.write_all(val.as_bytes()).is_err() || writer.flush().is_err() {
-                    println!("write failed");
-                    break;
-                }
-            }
-            None => println!("(nil)"),
+        if parser::write_reply(&mut writer, &reply).is_err() {
+            println!("write failed");
+            break;
         }
     }
 }

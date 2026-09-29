@@ -11,59 +11,18 @@ pub enum Command{
 
 impl Command{
 
-    pub fn parse(cmd: &str) -> Result<Command, error::ParseError>{
-        let cmd_vec: Vec<&str> = cmd.split(' ').collect();
-        match cmd_vec[0]{
-            "get" => {
-                match Get::parse_get(cmd_vec){
-                    Ok(val) => {
-                        Ok(Command::Get(val))
-                    },
-                    Err(error) => {
-                        Err(error)
-                    },
-                }
-            },
-            "set" =>{
-                match Set::parse_set(cmd_vec){
-                    Ok(val) => {
-                        Ok(Command::Set(val))
-                    },
-                    Err(error) => {
-                        Err(error)
-                    },
-                }
-            },
-            "del" => {
-                match Del::parse_del(cmd_vec){
-                    Ok(val) => {
-                        Ok(Command::Del(val))
-                    },
-                    Err(error) => {
-                        Err(error)
-                    },
-                }
-            },
-            "ping" => {
-                match Ping::parse_ping(cmd_vec){
-                    Ok(val) => {
-                        Ok(Command::Ping(val))
-                    },
-                    Err(error) => {
-                        Err(error)
-                    },
-                }
-            },
-            _ => {
-                match Unknown::parse_unknown(){
-                    Ok(val) => {
-                        Ok(Command::Unknown(val))
-                    },
-                    Err(error) => {
-                        Err(error)
-                    },
-                }
-            },
+    pub fn parse(parts: &[String]) -> Result<Command, error::ParseError> {
+        let Some(name) = parts.first() else {
+            return Err(error::ParseError);
+        };
+        let args: Vec<&str> = parts.iter().map(String::as_str).collect();
+
+        match name.to_ascii_lowercase().as_str() {
+            "get"  => Get::parse_get(args).map(Command::Get),
+            "set"  => Set::parse_set(args).map(Command::Set),
+            "del"  => Del::parse_del(args).map(Command::Del),
+            "ping" => Ping::parse_ping(args).map(Command::Ping),
+            _  => Err(error::ParseError),
         }
     }
 }

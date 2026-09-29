@@ -86,7 +86,7 @@ pub fn parse_resp(reader: &mut impl BufRead) -> Result<Option<Vec<String>>, Resp
         return Ok(Some(Vec::new()));
     }
     let mut parts = Vec::with_capacity(count as usize);
-    for _ in 1..count{
+    for _ in 0..count{
         parts.push(read_bulk_string(reader)?);
     }
     
@@ -104,7 +104,7 @@ fn read_bulk_string(reader: &mut impl BufRead) -> Result<String, RespError>{
         return Err(RespError::Protocol(format!("expected '$', got: {line:?}")));
     }
 
-    let count: i64 = line.parse()
+    let count: i64 = line[1..].parse()
         .map_err(|_|RespError::Protocol(format!("bad bulk length: {line:?}")))?;
 
     if count<=0{
